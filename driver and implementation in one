@@ -1,0 +1,211 @@
+#include<iostream>
+#include <iomanip>
+#include<cmath>
+#include <fstream>
+
+using namespace std;
+
+int main()
+{
+	ifstream inFile; // for input 
+	ofstream outFile; // for output
+	char sensorRead[80] = { "\0" }; // allows 80 characters in the array for input
+	char result[80]  = { "\0"} ; // allows 80 characters in the array for output
+	double openCounter = 0.0; // used to count how many times incorrect input is entered
+ 	int countMax = 5; // maximum number of times incorrect input can be put in before program terminates
+	double outputCounter = 0.0;
+	int firstRead; // first number in the input file that is read
+	int secRead; // first number in the pair of numbers starting on second line to be read
+	int thrRead; // second number in the pair of numbers to be read starting on the second line
+	int totalnumPairs = 0; // number of total pairs in the input (firstRead)
+	double weight = 0.0; // part of weight formula for the bottles
+	const double springVaries = (5.0/255.0); // amount the spring length varies
+	int smallGlass = 0; // number of small bottles in program counter
+	int medGlass = 0; // number of medium bottles in program counter
+	int largeGlass = 0;// number of large bottles in program counter
+	double maxWaste = 0.0; // maximuim amount of waste that can be in waste container before it needs to be emptied
+	double totalWaste = 0.0; // counter of waste in waste container
+	
+	do
+		{
+	cout << " Enter the input filename " << endl; // prompt for filename
+	cin >> sensorRead;
+	inFile.open(sensorRead);
+
+	if(inFile.fail())  // if cannot be opened
+		{
+			cerr << " the input file " << sensorRead << " could not be opened " << endl; 
+		}
+	else
+		{
+			break; // leave if loop
+		}
+			++openCounter;
+		}while(openCounter <= countMax); // lets you repeat loop a max of 6 times before hitting count max 
+
+	if(openCounter > countMax) // if count max is exceeded
+	{
+		cout << "You exceeded max number of tries alllowed for entering the input " << sensorRead << endl;
+		return 1;
+	}
+
+	do 
+	{
+		cout << " Enter the output filename " << endl; // prompt for filename
+		cin >> result;
+		outFile.open(result);
+
+		if(outFile.fail()) // if this fails
+		{
+			cerr << " The output file " << "result << could not be open ";
+		}
+		else 
+		{
+			break;
+		}
+		++outputCounter;
+	}while(outputCounter <= countMax);
+
+	if(outputCounter > countMax)
+	{
+		cout << "You exceeded the maximum number of tries allowed for entering the output " << result << endl;
+		return 2;
+	}
+
+	if(!(inFile >> firstRead)) // if file can't be read
+	{
+		if(inFile.eof()) // because file is at end of file
+		{
+			cout << " Data file is empty " << endl;
+		}
+		else 
+		{
+			cout << " Unable to read the number of sensor readings " << endl; // if not at end of file and still can't be read then must be an illegal character type
+			inFile.close();
+				return 3;
+		}
+	}
+	if(0 >= firstRead || firstRead > 10000) // makes sure that first integer is within boundaries
+	{
+		cout << " The number of sensor readings is out of range " <<  endl;
+		inFile.close();
+		return 4;
+	}
+	for(totalnumPairs = 0; totalnumPairs < firstRead; totalnumPairs++) // total number of pairs has to be less than first number in file 
+	{
+		if(!(inFile >> secRead)) // if file cannot read first number in pair
+		{
+			if(inFile.eof()) // this is if there is nothing on that line
+			{
+				cout << " No more data,  simulation completed early at line " << totalnumPairs << "of input";
+			}
+			else // else character is not the appropriate character needed
+			{
+				cout << "The character read on line " << totalnumPairs << "  of your input is not an integer" << endl;
+				cout << " Please correct your data file and rerun ";
+				return 5;
+			}
+		}
+		if(!(inFile >> thrRead)) // if file cannot read second number in pair
+		{
+			if(inFile.eof()) // if there is only one number on the line
+			{
+				cerr << "No light sensor mearsurment to match final weight measurement ";
+				break;
+			}
+			else // there are two things on the line but the second one is not the appropriate character
+			{
+				cerr << "The character read on line " << totalnumPairs << "  of your input is not an integer" << endl;
+				cerr << " Please correct your data file and rerun ";
+				return 6;
+			}
+		}
+		if((secRead >= 0 && secRead <=  255) && (thrRead >= 0 && thrRead <= 255)) // makes sure values are in correct boundaries
+		{
+			weight = 12 * (secRead* springVaries); // calculates the correct weight reading
+				if((thrRead >= 240 && thrRead <= 255) && (weight >= 15 && weight <= 21)) // boundaries for clear glass
+				{
+					cout << " The robot has rotated 90 degrees to face the clear glass conveyor belt" <<  endl;
+					outFile << " The robot has rotated 90 degrees to face the clear glass conveyor belt" <<  endl;
+					cout << " The robot has placed" << smallGlass++ << " clear bottles on the conveyor belt" << endl;
+					outFile << " The robot has placed" << smallGlass << " clear bottles on the conveyor belt" << endl;
+					cout << " The robot rotates -90 degrees " << endl;
+					outFile << " The robot rotates -90 degrees " << endl;
+				}
+				else if((thrRead >= 150 && thrRead <= 175) && (weight >= 35 && weight <= 41)) // boundaries for green glass
+				{
+					cout << " The robot has rotated 150 degrees to face the green glass conveyor belt" << endl;
+					outFile << " The robot has rotated 150 degrees to face the green glass conveyor belt" << endl;
+					cout << " The robot has placed" << medGlass++ << " green bottles on the conveyor belt" << endl;
+					outFile << " The robot has placed" << medGlass << " green bottles on the conveyor belt" << endl;
+					cout << " The robot rotates -150 degrees " << endl;
+					outFile << " The robot rotates -150 degrees " << endl;
+				}
+				else if((thrRead >= 20 && thrRead <= 90) && (weight >= 53 && weight <= 59)) // boundaries for brown glass
+				{
+					cout << " The robot has rotated 210 degrees to face the brown glass conveyor belt" << endl;
+					outFile << " The robot has rotated 210 degrees to face the brown glass conveyor belt" << endl;
+					cout << " The robot has placed" << largeGlass++ << " brown bottles on the conveyor belt" << endl;
+					outFile <<  " The robot has placed" << largeGlass << " brown bottles on the conveyor belt" << endl;
+					cout << " The robot rotates -210 degrees " << endl;
+					outFile << " The robot rotates -210 degrees " << endl;
+				}
+				else // glass doen't fit any of those descriptions
+				{
+					maxWaste += weight;
+					totalWaste += weight;
+					if(maxWaste < 500) //  if waste basket not full
+					{
+						cout << "The robot has rotated 270 degrees to face the waste container" << endl;
+						outFile << "The robot has rotated 270 degrees to face the waste container" << endl;
+						cout << fixed << setprecision(3) << "The waste container now contains " << setw(8) << maxWaste << " grams of glass" << endl;
+						outFile << fixed << setprecision(3) << "The waste container now contains " << setw(8) << maxWaste << " grams of glass" << endl;
+						cout << "The robot rotates -270 degrees" << endl;
+						outFile << "The robot rotates -270 degrees" << endl;
+					}
+					else // if full
+					{
+						maxWaste = 0; // empties it
+						cout << "A new waste container is needed" << endl;
+						outFile << "A new waste container is needed" << endl;
+						cout << " Stop the conveyor belt" << endl;
+						outFile << " Stop the conveyor belt" << endl;
+						cout << " A new waste container is ready for use" << endl;
+						outFile << " A new waste container is ready for use" << endl;
+						cout << "The waste container now contains " << maxWaste << " grams of glass" << endl;
+						outFile << "The waste container now contains " << maxWaste << " grams of glass" << endl;
+						maxWaste += weight; // adds current bottle to it
+						cout << fixed << setprecision(3) << "The waste container now contains " << setw(8) << maxWaste << " grams of glass" << endl;
+						outFile << fixed << setprecision(3) << "The waste container now contains " << setw(8) << maxWaste << " grams of glass" << endl;
+						cout << "The robot rotates -270 degrees" << endl;
+						outFile <<  "The robot rotates -270 degrees" << endl;
+						cout << "Start conveyor belt" << endl;
+						outFile << "Start conveyor belt" << endl;
+					}
+				}
+		}
+		else //  sensor readings are out of range
+		{
+			cerr << "The sensor is out of range,  ignoring line " << totalnumPairs << " of input file" << endl;
+		}
+	
+
+				 
+	}
+	// summary of what happened in input file
+	cout << endl << endl << endl << endl;
+	outFile << endl << endl << endl << endl;
+	cout << " SUMMARY" << endl;
+	outFile << " SUMMARY" << endl;
+	cout << "The robot processed " << smallGlass << " Clear bottles " << endl;
+	outFile << "The robot processed " << smallGlass << " Clear bottles " << endl;
+	cout << "The robot processed " << medGlass << " green bottles " << endl;
+	outFile << "The robot processed " << medGlass << " green bottles " << endl;
+	cout << "The robot processed " << largeGlass << " browm bottles " << endl;
+	outFile << "The robot processed " << largeGlass << " browm bottles " << endl;
+	cout << fixed << setprecision(4) << "The robot processed " << setw(12) << totalWaste/1000 << " kg of waste glass";
+	outFile << fixed << setprecision(4) << "The robot processed " << setw(12) << totalWaste/1000 << "kg of waste glass";
+
+	return 7;
+}
+	
